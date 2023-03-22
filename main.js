@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import * as dat from 'dat.gui';
 
+// Texture Loader
+const textureLoader = new THREE.TextureLoader();
+
 // Debug
 const gui = new dat.GUI();
 
@@ -12,17 +15,17 @@ const canvas = document.querySelector('canvas.webgl');
 // Scene
 const scene = new THREE.Scene();
 
-// Objects
-const geometry = new THREE.TorusGeometry(0.7, 0.2, 16, 100);
+const geometry = new THREE.PlaneBufferGeometry(1, 1.3);
 
-// Materials
+for (let i = 0; i < 5; i++) {
+	const material = new THREE.MeshBasicMaterial({
+		map: textureLoader.load(`/images/${i}.jpg`),
+	});
 
-const material = new THREE.MeshBasicMaterial();
-material.color = new THREE.Color(0xff0000);
-
-// Mesh
-const sphere = new THREE.Mesh(geometry, material);
-scene.add(sphere);
+	const img = new THREE.Mesh(geometry, material);
+	img.position.set(Math.random() + 0.3, i * -1.8);
+	scene.add(img);
+}
 
 // Lights
 
@@ -69,6 +72,8 @@ camera.position.y = 0;
 camera.position.z = 2;
 scene.add(camera);
 
+gui.add(camera.position, 'y').min(-10).max(10);
+
 // Controls
 // const controls = new OrbitControls(camera, canvas)
 // controls.enableDamping = true
@@ -82,6 +87,17 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// Mouse
+window.addEventListener('wheel', onMouseWheel);
+
+let y = 0;
+let position = 0;
+
+function onMouseWheel(event) {
+	// console.log(event.deltaY)
+	y = event.deltaY * 0.0007;
+}
+
 /**
  * Animate
  */
@@ -91,8 +107,11 @@ const clock = new THREE.Clock();
 const tick = () => {
 	const elapsedTime = clock.getElapsedTime();
 
-	// Update objects
-	sphere.rotation.y = 0.5 * elapsedTime;
+	// position gets updated depended on the y position, tied to onMouseWheel, but it gets slowed down after every change, causing a smooth scroll
+
+	position += y;
+	y *= 0.9;
+	camera.position.y = position;
 
 	// Update Orbital Controls
 	// controls.update()

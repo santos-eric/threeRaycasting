@@ -15,7 +15,7 @@ const canvas = document.querySelector('canvas.webgl');
 // Scene
 const scene = new THREE.Scene();
 
-const geometry = new THREE.PlaneBufferGeometry(1, 1.3);
+const geometry = new THREE.PlaneGeometry(1, 1.3);
 
 for (let i = 0; i < 5; i++) {
 	const material = new THREE.MeshBasicMaterial({
@@ -26,6 +26,14 @@ for (let i = 0; i < 5; i++) {
 	img.position.set(Math.random() + 0.3, i * -1.8);
 	scene.add(img);
 }
+
+let objs = [];
+
+scene.traverse((object) => {
+	if (object.isMesh) {
+		objs.push(object);
+	}
+});
 
 // Lights
 
@@ -98,9 +106,17 @@ function onMouseWheel(event) {
 	y = event.deltaY * 0.0007;
 }
 
+const mouse = new THREE.Vector2();
+window.addEventListener('mousemove', (event) => {
+	mouse.x = (event.clientX / sizes.width) * 2 - 1;
+	mouse.y = -(event.clientY / sizes.Height) * 2 - 1;
+});
+
 /**
  * Animate
  */
+
+const raycaster = new THREE.Raycaster();
 
 const clock = new THREE.Clock();
 
@@ -111,6 +127,16 @@ const tick = () => {
 
 	position += y;
 	y *= 0.9;
+
+	// Raycaster
+	raycaster.setFromCamera(mouse, camera);
+	// tells us when raycaster is intersecting the objs
+	const intersects = raycaster.intersectObject(objs);
+
+	for (const intersect of intersects) {
+		console.log(intersect);
+	}
+
 	camera.position.y = position;
 
 	// Update Orbital Controls
